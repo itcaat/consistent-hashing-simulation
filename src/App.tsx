@@ -5,6 +5,7 @@ interface DataPoint {
   key: string;
   value: string;
   color: string;
+  position: number;
 }
 
 interface Node {
@@ -32,6 +33,7 @@ function App() {
   const [dataPoints, setDataPoints] = useState<DataPoint[]>([]);
   const [autoAddData, setAutoAddData] = useState(false);
   const [nodeCounter, setNodeCounter] = useState(0);
+  const [hoveredData, setHoveredData] = useState<DataPoint | null>(null);
 
   const addNode = () => {
     if (nodes.length >= 8) return;
@@ -70,7 +72,8 @@ function App() {
     setDataPoints(prev => [...prev, {
       key,
       value,
-      color: nearestNode.color
+      color: nearestNode.color,
+      position
     }]);
   };
 
@@ -120,7 +123,8 @@ function App() {
       
       return {
         ...dp,
-        color: nearestNode.color
+        color: nearestNode.color,
+        position
       };
     }));
   }, [nodes]);
@@ -171,6 +175,47 @@ function App() {
           <div className="relative w-[600px] h-[600px] mx-auto">
             {/* Hash ring */}
             <div className="absolute top-1/2 left-1/2 w-[500px] h-[500px] -mt-[250px] -ml-[250px] border-4 border-gray-200 rounded-full">
+              {/* Data points */}
+              {dataPoints.map((dp) => {
+                const angle = (dp.position * Math.PI) / 180;
+                const x = 250 + Math.cos(angle) * 250;
+                const y = 250 + Math.sin(angle) * 250;
+                
+                return (
+                  <div
+                    key={dp.key}
+                    className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-all duration-500 ease-in-out"
+                    style={{
+                      left: x,
+                      top: y,
+                      opacity: 0,
+                      animation: 'fadeIn 0.5s ease-out forwards'
+                    }}
+                    onMouseEnter={() => setHoveredData(dp)}
+                    onMouseLeave={() => setHoveredData(null)}
+                  >
+                    <div
+                      className="w-3 h-3 rounded-full transition-all duration-500"
+                      style={{ 
+                        backgroundColor: dp.color,
+                        transform: 'scale(0)',
+                        animation: 'scaleIn 0.5s ease-out forwards'
+                      }}
+                    />
+                    {hoveredData?.key === dp.key && (
+                      <div className="absolute z-10 bg-white p-2 rounded shadow-lg -translate-x-1/2 whitespace-nowrap">
+                        <div className="text-sm">
+                          <strong>Key:</strong> {dp.key}
+                        </div>
+                        <div className="text-sm">
+                          <strong>Value:</strong> {dp.value}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+              
               {/* Nodes */}
               {nodes.map((node) => {
                 const angle = (node.position * Math.PI) / 180;
@@ -180,15 +225,21 @@ function App() {
                 return (
                   <div
                     key={node.id}
-                    className="absolute -translate-x-1/2 -translate-y-1/2"
+                    className="absolute -translate-x-1/2 -translate-y-1/2 transition-all duration-500 ease-in-out"
                     style={{
                       left: x,
                       top: y,
+                      opacity: 0,
+                      animation: 'fadeIn 0.5s ease-out forwards'
                     }}
                   >
                     <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
-                      style={{ backgroundColor: node.color }}
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold transition-all duration-500"
+                      style={{ 
+                        backgroundColor: node.color,
+                        transform: 'scale(0)',
+                        animation: 'scaleIn 0.5s ease-out forwards'
+                      }}
                     >
                       <Server className="w-4 h-4" />
                     </div>
@@ -206,8 +257,12 @@ function App() {
                 return (
                   <div
                     key={node.id}
-                    className="p-4 rounded-lg"
-                    style={{ backgroundColor: node.color + '15' }}
+                    className="p-4 rounded-lg transition-all duration-500 ease-in-out"
+                    style={{ 
+                      backgroundColor: node.color + '15',
+                      opacity: 0,
+                      animation: 'fadeIn 0.5s ease-out forwards'
+                    }}
                   >
                     <div className="flex items-center gap-2 mb-2">
                       <div
